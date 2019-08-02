@@ -1,0 +1,10 @@
+<template name=".bff" value="import (&#10;&#9;&quot;github.com/geekymedic/neon/bff&quot;&#10;)&#10;&#10;&#10;// @type: bff.interface.request&#10;// @interface: $name$Handler&#10;// @des: &#10;type $name$Request struct {&#10;&#10;}&#10;&#10;// @type: bff.interface.response&#10;// @interface: $name$Handler&#10;// @describe: &#10;type $name$Response struct {&#10;&#9;&#10;}&#10;&#10;// @type: bff.interface&#10;// @name: $name$ &#10;// @login: Y&#10;// @page:&#10;// @uri: /api/$system$/v1/$package$/$interface$&#10;// @describe: $describe$&#10;func $name$Handler(state *bff.State) {&#10;&#9;var (&#10;&#9;&#9;ask = &amp;$name$Request{}&#10;&#9;&#9;ack = &amp;$name$Response{}&#10;&#9;)&#10;&#9;if err := state.ShouldBindJSON(ask); err != nil {&#10;&#9;&#9;state.Error(bff.CodeRequestBodyError, err)&#10;&#9;&#9;return&#10;&#9;}&#10;&#9;&#10;&#9;state.Success(ack)&#10;}&#10;" description="bff interface init" toReformat="false" toShortenFQNames="true">
+  <variable name="name" expression="capitalize(camelCase(fileNameWithoutExtension()))" defaultValue="" alwaysStopAt="true" />
+  <variable name="system" expression="" defaultValue="" alwaysStopAt="true" />
+  <variable name="package" expression="packageName()" defaultValue="" alwaysStopAt="true" />
+  <variable name="interface" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="true" />
+  <variable name="describe" expression="" defaultValue="" alwaysStopAt="true" />
+  <context>
+    <option name="GO_FILE" value="true" />
+  </context>
+</template>
