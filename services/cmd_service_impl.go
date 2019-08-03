@@ -28,7 +28,7 @@ func (s *GenerateServer) CreateService(_ context.Context, arg *GenServerServiceA
 		makefileFp := types.NewBaseFile(serviceBaseDir.Append("Makefile").(types.DirNode).Abs())
 		types.AssertNil(makefileFp.Create(types.DefFlag, types.DefPerm))
 		txt, err := templates.ParseTemplate(templates.BffMakefileTemplate,
-			map[string]interface{}{"Name": arg.Name, "Typ": "service", "System": arg.SysName})
+			map[string]interface{}{"Name": arg.Name, "Typ": "services", "System": arg.SysName})
 		types.AssertNil(err)
 		_, err = makefileFp.WriteString(txt)
 		types.AssertNil(err)
