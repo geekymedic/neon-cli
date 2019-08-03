@@ -59,7 +59,7 @@ func (s *GenerateServer) CreateService(_ context.Context, arg *GenServerServiceA
 		ymlFp := types.NewBaseFile(configBaseDir.Append("config.yml").(types.DirNode).Abs())
 		types.AssertNil(ymlFp.Create(types.DefFlag, types.DefPerm))
 		txt, err := templates.ParseTemplate(templates.ServiceConfigYmlTpl, map[string]interface{}{
-			"Name": fmt.Sprintf("%s%s-service-%s", arg.SysName, sysdes.SystemNameSubffix, arg.Name)})
+			"Name": fmt.Sprintf("%s%s-services-%s", arg.SysName, sysdes.SystemNameSubffix, arg.Name)})
 		types.AssertNil(err)
 		_, err = ymlFp.WriteString(txt)
 		types.AssertNil(err)
