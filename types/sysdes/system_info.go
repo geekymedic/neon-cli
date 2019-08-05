@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/geekymedic/neon-cli/types"
-	"github.com/geekymedic/neon-cli/util"
-
 	"github.com/geekymedic/neon/errors"
 )
 
@@ -90,7 +88,7 @@ func NewBffs(sys *SystemDes) (*Bffs, error) {
 		}
 		item, err := NewBffItem(types.NewBaseDir(path), sys)
 		if err != nil {
-			util.StdDebug("Fail to create bff: %s", path)
+			logger.Warnf("Fail to create bff: %s", path)
 		} else if item != nil && len(item.Impls) > 0 {
 			items = append(items, item)
 		}
@@ -170,9 +168,12 @@ func NewBffItem(dirNode types.DirNode, sys *SystemDes) (*BffItem, error) {
 		if info == nil || info.IsDir() || path == dirNode.Abs() || err != nil {
 			return nil
 		}
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
 		impl, err := NewBffImpl(types.NewBaseFile(path), sys)
 		if err != nil {
-			logger.Debug("Fail to parse interface: %v", err.Error())
+			logger.Warnf("Fail to parse interface: %v", err.Error())
 		} else {
 			bff.Impls = append(bff.Impls, impl)
 		}

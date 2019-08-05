@@ -8,10 +8,10 @@ type AstMeta struct {
 	VarName     string   // 声明
 	SysType     string   // 系统类型名
 	FullName    string   // 全名
-	RawExpr     ast.Expr // array: *ast.ArrayType, map: *ast.MapType, struct: *ast.Ident
+	RawExpr     ast.Expr // array: *ast.ArrayType, map: *ast.MapType, struct: *ast.Ident, it will be nil it cross file struct happen
 	Comment     *ast.CommentGroup
 	Doc         *ast.CommentGroup
-	CrossModule bool // 是否引用跨模块或者跨文件的类型
+	CrossModule bool // 是否有可能引用跨模块或者跨文件的类型，只是有可能，并不一定是
 }
 
 func NewAstMeta(varName, sysType, fullName string, comment, doc *ast.CommentGroup, crossModule bool, rawExpr ast.Expr) AstMeta {

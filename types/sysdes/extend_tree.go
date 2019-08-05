@@ -37,11 +37,15 @@ func NewExtendTree(tree *xast.TopNode) *ExtendTree {
 
 // Note:
 // topNode share memeory with sourcetree
-func (topNode *ExtendTree) ReplaceExtraNode(sourceTree *xast.TopNode) (count int) {
+func (topNode *ExtendTree) ReplaceExtraNode(sourceTree *xast.TopNode, fullName ...string) (count int) {
 	if sourceTree == nil {
 		return
 	}
-	for _, targetNode := range topNode.FindNodesByFullNames([]string{sourceTree.TypeName}) {
+	if len(fullName) == 0 {
+		fullName = []string{sourceTree.TypeName}
+	}
+	//fullName := sourceTree.Meta.(*xast.AstMeta).FullName
+	for _, targetNode := range topNode.FindNodesByFullNames(fullName) {
 		node, ok := targetNode.(*xast.ExtraNode)
 		if !ok {
 			logger.Warnf("the node should extraNode, but actual it is %T", targetNode)

@@ -87,7 +87,7 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 
 	// request table
 	{
-		if table := assemblyRequestOrResponseTable(bffReqTree.TopNode); len(table) > 0 {
+		if table := assemblyRequestOrResponseTable(bffReqTree.TopNode, true); len(table) > 0 {
 			bffApi.RequestTable = table
 			var data bytes.Buffer
 			if err := json.NewEncoder(&data).Encode(InjectAstTree(bffReqTree.TopNode)); err != nil {
@@ -105,7 +105,7 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 
 	// response table
 	{
-		if table := assemblyRequestOrResponseTable(bffReplyTree.TopNode); len(table) > 0 {
+		if table := assemblyRequestOrResponseTable(bffReplyTree.TopNode, false); len(table) > 0 {
 			bffApi.ResponseTable = table
 			var data bytes.Buffer
 			if err := json.NewEncoder(&data).Encode(InjectAstTree(bffReplyTree.TopNode)); err != nil {
@@ -149,7 +149,7 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 	return bffApi, mkFp.Close()
 }
 
-func assemblyRequestOrResponseTable(topNode *xast.TopNode) []templates.MarkdownTable {
+func assemblyRequestOrResponseTable(topNode *xast.TopNode, isReq bool) []templates.MarkdownTable {
 	var tables []templates.MarkdownTable
 	topNode.DepthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
 		var requestTable []templates.MarkdownReqRespTable
@@ -157,12 +157,12 @@ func assemblyRequestOrResponseTable(topNode *xast.TopNode) []templates.MarkdownT
 		switch typ := node.(type) {
 		case *xast.TopNode:
 			title = typ.TypeName
-			requestTable = parseExtraNode(typ.ExtraNodes)
-			requestTable = append(requestTable, parseLeafNode(typ.LeavesNodes)...)
+			requestTable = parseExtraNode(typ.ExtraNodes, isReq)
+			requestTable = append(requestTable, parseLeafNode(typ.LeavesNodes, isReq)...)
 		case *xast.ExtraNode:
 			title = astutil.SimpleName(typ.Meta.(*xast.AstMeta).RawExpr)
-			requestTable = parseExtraNode(typ.ExtraNodes)
-			requestTable = append(requestTable, parseLeafNode(typ.LeavesNodes)...)
+			requestTable = parseExtraNode(typ.ExtraNodes, isReq)
+			requestTable = append(requestTable, parseLeafNode(typ.LeavesNodes, isReq)...)
 		case *xast.LeafNode:
 		default:
 			types.PanicSanityf("unsupport type %T", typ)

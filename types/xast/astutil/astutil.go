@@ -132,7 +132,8 @@ func SystemType(expr ast.Expr) (string, bool) {
 	case *ast.MapType:
 		return reflect.Map.String(), false
 	case *ast.ArrayType:
-		return reflect.Array.String(), false
+		//logger.With("module", realType, "elt", realType.Elt, "type", fmt.Sprintf("%T", realType.Elt)).Info("Cross modules")
+		return reflect.Array.String(), !IsSysInnerType(fmt.Sprintf("%v", realType.Elt))
 	case *ast.StarExpr: // pointer
 		return SystemType(realType.X)
 	default:
@@ -289,7 +290,7 @@ func BuildStructTree(structName string, filename string, src interface{}) (*xast
 		for _, typeSpec := range genSpec.Specs {
 			if spec, ok := typeSpec.(*ast.TypeSpec); ok {
 				if spec.Name.Name == structName {
-					meta := xast.AstMeta{Doc: genSpec.Doc}
+					meta := xast.AstMeta{Doc: genSpec.Doc, FullName: structName, SysType: reflect.Struct.String()}
 					topNode = xast.NewTopNode(structName, nil, nil, &meta)
 					WalkTypeSpec(context.TODO(), "", typeSpec, FilterRepeatMiddle(RecycleCheckMiddle(fn, buildTreeFn)))
 					goto Done

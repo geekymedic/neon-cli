@@ -14,7 +14,7 @@ import (
 )
 
 // 解析扩展节点，参数注解在ast扩展节点上
-func parseExtraNode(extraNodes map[string]*xast.ExtraNode) (apiField []templates.MarkdownReqRespTable) {
+func parseExtraNode(extraNodes map[string]*xast.ExtraNode, isReq bool) (apiField []templates.MarkdownReqRespTable) {
 	if extraNodes == nil {
 		return nil
 	}
@@ -31,13 +31,19 @@ func parseExtraNode(extraNodes map[string]*xast.ExtraNode) (apiField []templates
 			item.FieldValue = commentSplit[2]
 			item.FieldRemark = commentSplit[3]
 			apiField = append(apiField, item)
+		} else {
+			commentSplit := strings.SplitN(strings.TrimSpace(meta.Comment.Text()), "|", 2)
+			commentSplit = append(commentSplit, "", "")
+			item.FieldDesc = commentSplit[0]
+			item.FieldRemark = commentSplit[1]
+			apiField = append(apiField, item)
 		}
 	}
 	return
 }
 
 // 解析叶子节点，参数注解在ast叶子节点上
-func parseLeafNode(leafNodes map[string]*xast.LeafNode) (apiField []templates.MarkdownReqRespTable) {
+func parseLeafNode(leafNodes map[string]*xast.LeafNode, isReq bool) (apiField []templates.MarkdownReqRespTable) {
 	if leafNodes == nil {
 		return nil
 	}
@@ -47,13 +53,21 @@ func parseLeafNode(leafNodes map[string]*xast.LeafNode) (apiField []templates.Ma
 		item.FieldName = meta.VarName
 		item.FieldType = meta.FullName
 		if meta.Comment != nil {
-			commentSplit := strings.SplitN(strings.TrimSpace(meta.Comment.Text()), "|", 4)
-			commentSplit = append(commentSplit, "", "", "", "")
-			item.FieldDesc = commentSplit[0]
-			item.FieldIgnore = commentSplit[1]
-			item.FieldValue = commentSplit[2]
-			item.FieldRemark = commentSplit[3]
-			apiField = append(apiField, item)
+			if isReq {
+				commentSplit := strings.SplitN(strings.TrimSpace(meta.Comment.Text()), "|", 4)
+				commentSplit = append(commentSplit, "", "", "", "")
+				item.FieldDesc = commentSplit[0]
+				item.FieldIgnore = commentSplit[1]
+				item.FieldValue = commentSplit[2]
+				item.FieldRemark = commentSplit[3]
+				apiField = append(apiField, item)
+			} else {
+				commentSplit := strings.SplitN(strings.TrimSpace(meta.Comment.Text()), "|", 2)
+				commentSplit = append(commentSplit, "", "")
+				item.FieldDesc = commentSplit[0]
+				item.FieldRemark = commentSplit[1]
+				apiField = append(apiField, item)
+			}
 		}
 	}
 	return

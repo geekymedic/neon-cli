@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"github.com/geekymedic/neon/logger"
 	"go/ast"
 	"go/parser"
 	"os"
@@ -360,15 +361,17 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 		links = append(links, topNode)
 		var crossModule []string
 		topNode.DepthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
-			if extra, ok := node.(*xast.ExtraNode); ok && extra.Meta.(*xast.AstMeta).CrossModule {
-				crossModule = append(crossModule, extra.Meta.(*xast.AstMeta).FullName)
+			if extra, ok := node.(*xast.ExtraNode); ok && extra.Meta.(*xast.AstMeta).CrossModule &&
+				fixCrossStructs(extra.Meta.(*xast.AstMeta).VarName, fileNode.Abs(), nil) {
+				simpleName := astutil.SimpleName(extra.Meta.(*xast.AstMeta).RawExpr)
+				logger.With("path", fileNode.Abs(), "typename", topNode.TypeName, "module", simpleName).Info("Find a cross struct")
+				crossModule = append(crossModule, simpleName)
 			}
 			return true
 		})
 		if len(crossModule) == 0 {
 			continue
 		}
-
 		for _, module := range crossModule {
 			var targetErr = errors.NewStackError("found target")
 			err := fileNode.Walk(func(path string, info os.FileInfo, err error) error {
@@ -377,12 +380,14 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 				}
 				topNode, err := astutil.BuildStructTree(module, path, nil)
 				if err == nil && topNode != nil && topNode.TypeName == module {
+					logger.With("type-name", topNode.TypeName, "path", path, "module", module, "fileNode", fileNode.Abs()).Info("Fix cross file struct")
 					stack.PushBack(topNode)
 					return targetErr
 				}
 				return nil
 			})
 			if err != targetErr {
+				logger.With("err", err).Error("fail to build struct tree")
 				types.PanicSanity(fmt.Sprintf("not found '%s' object define", module))
 			}
 		}
@@ -399,4 +404,9 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 	// TODO Why? need rebuild
 	topNode.ReBuildWalkPath()
 	return nil
+}
+
+func fixCrossStructs(structName string, filename string, src interface{}) bool {
+	topNode, err := astutil.BuildStructTree(structName, filename, src)
+	return err == nil && topNode == nil
 }

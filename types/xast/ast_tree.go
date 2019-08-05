@@ -19,15 +19,6 @@ var (
 	EmptyTopTree = TopNode{}
 )
 
-//type Meta struct {
-//	Name     string
-//	Type     string
-//	Des      string
-//	Ignore   string
-//	DefValue interface{}
-//	Remark   string
-//}
-
 type WalkFunc func(ctx context.Context, walkPath string, node interface{}) bool
 
 func NewTopNode(typeName string,
@@ -284,7 +275,7 @@ func (topNode *TopNode) DepthCount() int {
 func (topNode *TopNode) NodeCount() int {
 	count := 0
 	topNode.DepthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
-		count ++
+		count++
 		return true
 	})
 	return count
@@ -348,6 +339,29 @@ func (topNode *TopNode) FindNode(walkPath string) (targetNode interface{}, ok bo
 	}
 }
 
+func (topNode *TopNode) FindNodesBySimpleNames(simpleNames []string, simpleFn func(node interface{}) string) (targetNodes []interface{}) {
+	if topNode == nil {
+		return nil
+	}
+
+	findFn := func(simpleName string) bool {
+		for _, _simpleName := range simpleNames {
+			if simpleName == _simpleName {
+				return true
+			}
+		}
+		return false
+	}
+	topNode.DepthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
+		if findFn(simpleFn(node)) {
+			targetNodes = append(targetNodes, node)
+		}
+		return true
+	})
+	return
+}
+
+// 注意map[key]value 和 value 以及 []xxxx 和 xxxx的比较
 func (topNode *TopNode) FindNodesByFullNames(fullNames []string) (targetNodes []interface{}) {
 	if topNode == nil {
 		return nil
@@ -355,6 +369,14 @@ func (topNode *TopNode) FindNodesByFullNames(fullNames []string) (targetNodes []
 
 	findFn := func(fullName string) bool {
 		for _, _fullName := range fullNames {
+			idx1 := strings.LastIndex(fullName, "]")
+			idx2 := strings.LastIndex(_fullName, "]")
+			if idx1 > 0 {
+				fullName = fullName[idx1+1:]
+			}
+			if idx2 > 0 {
+				_fullName = _fullName[idx2+1:]
+			}
 			if fullName == _fullName {
 				return true
 			}
