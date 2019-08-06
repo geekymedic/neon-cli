@@ -361,11 +361,14 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 		links = append(links, topNode)
 		var crossModule []string
 		topNode.DepthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
-			if extra, ok := node.(*xast.ExtraNode); ok && extra.Meta.(*xast.AstMeta).CrossModule &&
-				fixCrossStructs(extra.Meta.(*xast.AstMeta).VarName, fileNode.Abs(), nil) {
+			if extra, ok := node.(*xast.ExtraNode); ok && extra.Meta.(*xast.AstMeta).CrossModule {
 				simpleName := astutil.SimpleName(extra.Meta.(*xast.AstMeta).RawExpr)
-				logger.With("path", fileNode.Abs(), "typename", topNode.TypeName, "module", simpleName).Info("Find a cross struct")
-				crossModule = append(crossModule, simpleName)
+				if !astutil.IsSysInnerType(simpleName) {
+					if fixCrossStructs(simpleName, fileNode.Abs(), nil) {
+						logger.With("path", fileNode.Abs(), "typename", topNode.TypeName, "module", simpleName).Info("Find a cross struct")
+						crossModule = append(crossModule, simpleName)
+					}
+				}
 			}
 			return true
 		})
@@ -378,6 +381,7 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 				if info.IsDir() || path == fileNode.Abs() || strings.HasSuffix(path, ".go") == false {
 					return nil
 				}
+				//logger.With("path", path).Info(crossModule)
 				topNode, err := astutil.BuildStructTree(module, path, nil)
 				if err == nil && topNode != nil && topNode.TypeName == module {
 					logger.With("type-name", topNode.TypeName, "path", path, "module", module, "fileNode", fileNode.Abs()).Info("Fix cross file struct")
@@ -407,6 +411,7 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 }
 
 func fixCrossStructs(structName string, filename string, src interface{}) bool {
+	//logger.With("structName", structName, "filename", filename).Info("fix cross structs")
 	topNode, err := astutil.BuildStructTree(structName, filename, src)
 	return err == nil && topNode == nil
 }

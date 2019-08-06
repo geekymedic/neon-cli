@@ -174,7 +174,7 @@ func FullName(expr ast.Expr) string {
 	return ""
 }
 
-// map[string]Foo parse to Foo
+// map[string]Foo parse to Foo, string parse to string
 func SimpleName(expr ast.Expr) string {
 	switch realType := expr.(type) {
 	case *ast.Ident:
