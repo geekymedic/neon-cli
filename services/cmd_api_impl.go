@@ -107,18 +107,24 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 	{
 		if table := assemblyRequestOrResponseTable(bffReplyTree.TopNode, false); len(table) > 0 {
 			bffApi.ResponseTable = table
-			var data bytes.Buffer
-			if err := json.NewEncoder(&data).Encode(InjectAstTree(bffReplyTree.TopNode)); err != nil {
-				return bffApi, err
-			}
-			bffApi.ResposneJson = fmt.Sprintf("```json\n%s```\n", pretty.Pretty(data.Bytes()))
-
-			ts, err := convertTS(bffReplyTree.TopNode)
-			if err != nil {
-				return bffApi, errors.Wrap(err)
-			}
-			bffApi.ResposneTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
 		}
+
+		var data bytes.Buffer
+		var ret = map[string]interface{}{
+			"Code":    0,
+			"Message": "请求成功",
+			"Data":    InjectAstTree(bffReplyTree.TopNode),
+		}
+		if err := json.NewEncoder(&data).Encode(ret); err != nil {
+			return bffApi, err
+		}
+		bffApi.ResposneJson = fmt.Sprintf("```json\n%s```\n", pretty.Pretty(data.Bytes()))
+
+		ts, err := convertTS(bffReplyTree.TopNode)
+		if err != nil {
+			return bffApi, errors.Wrap(err)
+		}
+		bffApi.ResposneTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
 	}
 
 	// errcode
