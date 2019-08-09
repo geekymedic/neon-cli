@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
+	"github.com/laohanlinux/converter"
 )
 
 type Server interface {
@@ -80,6 +81,10 @@ type GenServerCreateServiceImplArg struct {
 type GenServerAutomatedTestArg struct {
 	Out    types.DirNode
 	Domain string
+}
+
+type GenServerORMArg struct {
+	Table *converter.Table2Struct
 }
 
 type OptsFunc func(*BaseCmdServer)

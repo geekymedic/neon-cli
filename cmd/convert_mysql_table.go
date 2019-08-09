@@ -1,8 +1,9 @@
 package cmd
 
 import (
+	mini_gateway "github.com/geekymedic/neon-cli/mini-gateway"
 	"github.com/geekymedic/neon-cli/util"
-	"github.com/gohouse/converter"
+	"github.com/laohanlinux/converter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +21,15 @@ var convertMySQLCmd = &cobra.Command{
 		if table, err = cmd.Flags().GetString("table"); err != nil {
 			util.StdoutExit(-1, "Fail to convert mysql to Go struct: %v", err)
 		}
-		err = converter.NewTable2Struct().
+		t := converter.NewTable2Struct()
+		err = t.TagKey("orm").
 			Table(table).
 			Dsn(address).
 			Run()
+		if err != nil {
+			util.StdoutExit(-1, "Fail to convert mysql to Go struct: %v", err)
+		}
+		err = mini_gateway.ORM(t)
 		if err != nil {
 			util.StdoutExit(-1, "Fail to convert mysql to Go struct: %v", err)
 		}

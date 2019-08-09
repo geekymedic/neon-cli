@@ -4,6 +4,8 @@ import (
 	"github.com/geekymedic/neon-cli/services"
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
+	"github.com/laohanlinux/converter"
+
 	"os"
 )
 
@@ -97,4 +99,13 @@ func GenerateService(sysDirNode types.DirNode, serviceName string) error {
 		})
 		return err
 	}
+}
+
+func ORM(table *converter.Table2Struct) error {
+	var arg = &services.GenServerORMArg{
+		Table: table,
+	}
+	server := services.NewBaseCmdServer()
+	_, err := server.GenerServer.ORM(nil, arg)
+	return err
 }

@@ -7,7 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/iancoleman/strcase"
 )
 
 //map for converting mysql type to golang types
@@ -38,10 +40,10 @@ var typeForMysqlToGo = map[string]string{
 	"tinyblob":           "string",
 	"mediumblob":         "string",
 	"longblob":           "string",
-	"date":               "string", // time.Time
-	"datetime":           "string", // time.Time
-	"timestamp":          "string", // time.Time
-	"time":               "string", // time.Time
+	"date":               "time.Time", // time.Time or string
+	"datetime":           "time.Time", // time.Time or string
+	"timestamp":          "time.Time", // time.Time or string
+	"time":               "time.Time", // time.Time or string
 	"float":              "float64",
 	"double":             "float64",
 	"decimal":            "float64",
@@ -61,6 +63,7 @@ type Table2Struct struct {
 	enableJsonTag  bool   // 是否添加json的tag, 默认不添加
 	packageName    string // 生成struct的包名(默认为空的话, 则取名为: package model)
 	tagKey         string // tag字段的key值,默认是orm
+	tableColumns   map[string][]Column
 }
 
 type T2tConfig struct {
@@ -124,6 +127,18 @@ func (t *Table2Struct) Config(c *T2tConfig) *Table2Struct {
 	return t
 }
 
+func (t *Table2Struct) Column(tableName string) []Column {
+	return t.tableColumns[tableName]
+}
+
+func (t *Table2Struct) TableNames() []string {
+	var names []string
+	for name, _ := range t.tableColumns {
+		names = append(names, name)
+	}
+	return names
+}
+
 func (t *Table2Struct) Run() error {
 	if t.config == nil {
 		t.config = new(T2tConfig)
@@ -139,6 +154,7 @@ func (t *Table2Struct) Run() error {
 	if err != nil {
 		return err
 	}
+	t.tableColumns = tableColumns
 
 	//fmt.Println(tableColumns)
 
@@ -231,7 +247,7 @@ func (t *Table2Struct) dialMysql() {
 	return
 }
 
-type column struct {
+type Column struct {
 	ColumnName    string
 	Type          string
 	Nullable      string
@@ -241,15 +257,15 @@ type column struct {
 }
 
 // Function for fetching schema definition of passed table
-func (t *Table2Struct) getColumns(table ...string) (tableColumns map[string][]column, err error) {
-	tableColumns = make(map[string][]column)
+func (t *Table2Struct) getColumns(table ...string) (tableColumns map[string][]Column, err error) {
+	tableColumns = make(map[string][]Column)
 	// sql
 	var sqlStr = `SELECT COLUMN_NAME,DATA_TYPE,IS_NULLABLE,TABLE_NAME,COLUMN_COMMENT
 		FROM information_schema.COLUMNS 
 		WHERE table_schema = DATABASE()`
 	// 是否指定了具体的table
 	if t.table != "" {
-		sqlStr += fmt.Sprintf(" AND TABLE_NAME = '%s'", t.prefix + t.table)
+		sqlStr += fmt.Sprintf(" AND TABLE_NAME = '%s'", t.prefix+t.table)
 	}
 	// sql排序
 	sqlStr += " order by TABLE_NAME asc, ORDINAL_POSITION asc"
@@ -263,7 +279,7 @@ func (t *Table2Struct) getColumns(table ...string) (tableColumns map[string][]co
 	defer rows.Close()
 
 	for rows.Next() {
-		col := column{}
+		col := Column{}
 		err = rows.Scan(&col.ColumnName, &col.Type, &col.Nullable, &col.TableName, &col.ColumnComment)
 
 		if err != nil {
@@ -290,15 +306,18 @@ func (t *Table2Struct) getColumns(table ...string) (tableColumns map[string][]co
 			//} else {
 			//}
 		}
+		if t.tagKey == "" {
+			t.tagKey = "orm"
+		}
 		if t.enableJsonTag {
 			//col.Json = fmt.Sprintf("`json:\"%s\" %s:\"%s\"`", col.Json, t.config.TagKey, col.Json)
-			col.Tag = fmt.Sprintf("`%s:\"%s\" json:\"%s\"`", t.tagKey, col.Tag, col.Tag)
+			col.Tag = fmt.Sprintf("`%s:\"%s\" json:\"%s\"`", t.tagKey, strcase.ToSnake(col.Tag), col.Tag)
 		} else {
-			col.Tag = fmt.Sprintf("`%s:\"%s\"`", t.tagKey, col.Tag)
+			col.Tag = fmt.Sprintf("`%s:\"%s\"`", t.tagKey, strcase.ToSnake(col.Tag))
 		}
 		//columns = append(columns, col)
 		if _, ok := tableColumns[col.TableName]; !ok {
-			tableColumns[col.TableName] = []column{}
+			tableColumns[col.TableName] = []Column{}
 		}
 		tableColumns[col.TableName] = append(tableColumns[col.TableName], col)
 	}
@@ -329,6 +348,7 @@ func (t *Table2Struct) camelCase(str string) string {
 	}
 	return text
 }
+
 func tab(depth int) string {
 	return strings.Repeat("\t", depth)
 }

@@ -1,6 +1,13 @@
-a lib for golang , generate table schema to golang struct  
+a lib for golang , generate mysql table schema to golang struct  
 -----
 mysql表结构自动生成golang struct  
+
+## github地址
+[https://github.com/gohouse/converter](https://github.com/gohouse/converter)
+
+## 安装
+1. 直接下载可执行文件: [下载地址](https://github.com/gohouse/converter/releases)  
+2. golang源码包: `go get github.com/gohouse/converter`
 
 ## 示例表结构
 ```sql
@@ -14,14 +21,27 @@ CREATE TABLE `prefix_user` (
 ```
 
 ## 命令行用法
-1. 下载对应平台的可执行文件
+1. 下载对应平台的可执行文件, [下载地址](https://github.com/gohouse/converter/releases)
 
 2. 命令行执行
+    ```sh
+    # 文件名: table2struct-[$platform].[$version].[$suffix]
+    ./table2struct-linux.v0.0.3.bin -file model.go -dsn xxx -table user
+    ```
+
+3. 参数说明
 ```sh
-./table2struct.linux.bin -file model.go -dsn xxx -table user
+-dsn            string 数据库dsn配置
+-enableJsonTag  bool 是否添加json的tag
+-file           string 保存路径
+-packageName    string 包名
+-prefix         string 表前缀
+-realNameMethod string 结构体对应的表名
+-table          string 要迁移的表
+-tagKey         string tag的key
 ```
 
-## 简单用法
+## golang代码简单用法
 ```go
 package main
 import (
@@ -29,8 +49,7 @@ import (
 	"github.com/gohouse/converter"
 )
 func main() {
-	t2t := converter.NewTable2Struct()
-	err := t2t.
+	err := converter.NewTable2Struct().
 		SavePath("/home/go/project/model/model.go").
 		Dsn("root:root@tcp(localhost:3306)/test?charset=utf8").
 		Run()
@@ -38,7 +57,7 @@ func main() {
 }
 ```
 
-## 详细用法示例
+## golang代码详细用法示例
 ```go
 package main
 
