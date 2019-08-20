@@ -29,7 +29,7 @@ type SystemDes struct {
 	DirNode types.DirNode `json:",omitempty" yaml:"-"`
 }
 
-func NewSystemDes(dirNode interface{}) (*SystemDes, error) {
+func NewSystemDes(dirNode interface{}, bffName ...string) (*SystemDes, error) {
 	var sys = &SystemDes{
 		Author:     "GeekyMedic",
 		CreateTime: time.Now().String(),
@@ -62,9 +62,12 @@ func NewSystemDes(dirNode interface{}) (*SystemDes, error) {
 
 	idx := strings.LastIndex(sys.Name, "-")
 	sys.ShortName = sys.Name[0:idx]
-	bffs, err := NewBffs(sys)
+	bffs, err := NewBffs(sys, bffName...)
 	if err != nil {
 		return nil, err
+	}
+	if bffs == nil {
+		return nil, errors.NewStackError("not found any bff info")
 	}
 	sys.Bffs = bffs
 	return sys, nil
@@ -76,7 +79,7 @@ type Bffs struct {
 	Sys      *SystemDes    `json:",omitempty" yaml:"-"`
 }
 
-func NewBffs(sys *SystemDes) (*Bffs, error) {
+func NewBffs(sys *SystemDes, bffName ...string) (*Bffs, error) {
 	var (
 		bffDir = sys.DirNode.Append("bff").(types.DirNode)
 		items  []*BffItem
@@ -85,6 +88,13 @@ func NewBffs(sys *SystemDes) (*Bffs, error) {
 	err = bffDir.Walk(func(path string, info os.FileInfo, err error) error {
 		if info == nil || !info.IsDir() || path == bffDir.Abs() || err != nil {
 			return nil
+		}
+		if len(bffName) > 0 {
+			if strings.Contains(path, bffName[0]) {
+				logger.With("path", path).Info("Found a bff")
+			} else {
+				return nil
+			}
 		}
 		item, err := NewBffItem(types.NewBaseDir(path), sys)
 		if err != nil {
@@ -97,6 +107,9 @@ func NewBffs(sys *SystemDes) (*Bffs, error) {
 
 	if err != nil {
 		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, errors.NewStackError("Not found any bff info")
 	}
 	return &Bffs{DirNode: bffDir, BffItems: items, Sys: sys}, nil
 }
@@ -171,10 +184,14 @@ func NewBffItem(dirNode types.DirNode, sys *SystemDes) (*BffItem, error) {
 		if !strings.HasSuffix(path, ".go") {
 			return nil
 		}
+		if !targetImpls(path) {
+			return nil
+		}
+		logger.With("path", path).Info("Start handle impl")
 		impl, err := NewBffImpl(types.NewBaseFile(path), sys)
 		if err != nil {
 			logger.Warnf("Fail to parse interface: %v", err.Error())
-		} else {
+		} else if impl != nil{
 			bff.Impls = append(bff.Impls, impl)
 		}
 		return nil
@@ -222,7 +239,15 @@ type BffImpl struct {
 
 func NewBffImpl(fileNode types.FileNode, sysDes *SystemDes) (*BffImpl, error) {
 	var bffImpl = new(BffImpl)
-	bffTree, err := ParseBffInterfaceRequestAstTree(fileNode)
+	var err error
+	var bffTree *BffTree
+	defer func() {
+		if err1 := recover(); err1 != nil {
+			err = errors.Format("%v", err1)
+		}
+	}()
+
+	bffTree, err = ParseBffInterfaceRequestAstTree(fileNode)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +255,23 @@ func NewBffImpl(fileNode types.FileNode, sysDes *SystemDes) (*BffImpl, error) {
 	bffImpl.AstTree = bffTree
 	bffImpl.FileNode = fileNode
 	return bffImpl, nil
+}
+
+// Fuck，为聊兼容老项目
+var skipImpls = func(_ string) bool {
+	return false
+}
+
+func SkipImpls(fn func(_ string) bool) {
+	skipImpls = fn
+}
+
+var targetImpls = func(_ string) bool {
+	return true
+}
+
+func TargetImpls(fn func(_ string) bool) {
+	targetImpls = fn
 }
 
 //

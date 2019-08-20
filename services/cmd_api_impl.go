@@ -22,7 +22,6 @@ func (s *GenerateServer) GenerateApiDoc(_ context.Context, arg *GenServerApiDocA
 	var (
 		tables = templates.ApiListProperty{Title: "Api List"}
 	)
-
 	//var bffs sysdes.Bffs
 	{
 		s.sys.Bffs.BffIter(func(item *sysdes.BffItem) bool {

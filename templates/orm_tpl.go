@@ -15,4 +15,4 @@ type ORMProperty struct {
 	Type string
 }
 
-var ORMTemplate = template.Must(template.New("").Parse(ormTxt))
+var ORMTemplate = template.Must(template.New("").Funcs(template.FuncMap{"SqlColumn": SqlColumn}).Parse(ormTxt))

@@ -5,12 +5,24 @@ import (
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
 	"github.com/laohanlinux/converter"
+	"strings"
 
 	"os"
 )
 
-func GenerateMarkdown(sysDirNode, out types.DirNode, domain string) error {
-	sys, err := sysdes.NewSystemDes(sysDirNode)
+func GenerateMarkdown(sysDirNode, out types.DirNode, bffName, impl, domain string) error {
+	if impl != "" { // Fuck兼容老项目
+		sysdes.TargetImpls(func(p string) bool {
+			return strings.Contains(p, impl)
+		})
+	}
+	var sys *sysdes.SystemDes
+	var err error
+	if bffName == "" {
+		sys, err = sysdes.NewSystemDes(sysDirNode)
+	} else {
+		sys, err = sysdes.NewSystemDes(sysDirNode, bffName)
+	}
 	if err != nil {
 		return err
 	}

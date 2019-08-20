@@ -12,6 +12,8 @@ var generateOpt = struct {
 	SysDir    string
 	Out       string
 	ApiDomain string
+	bffName   string
+	implName  string
 }{}
 
 var generateMdCmd = &cobra.Command{
@@ -28,7 +30,7 @@ var generateMdCmd = &cobra.Command{
 			util.StdoutExit(-1, "Fail to generate markdown: %v", err)
 		}
 		outDirNode := types.NewBaseDir(dir)
-		err = mini_gateway.GenerateMarkdown(sysDirNode, outDirNode, generateOpt.ApiDomain)
+		err = mini_gateway.GenerateMarkdown(sysDirNode, outDirNode, generateOpt.bffName, generateOpt.implName, generateOpt.ApiDomain)
 		if err != nil {
 			util.StdoutExit(-1, "Fail to generate markdown: %v", err)
 		}
@@ -39,6 +41,9 @@ var generateMdCmd = &cobra.Command{
 func init() {
 	curDir, _ := os.Getwd()
 	generateMdCmd.Flags().StringVar(&generateOpt.SysDir, "sys-dir", curDir, "system directory")
-	generateMdCmd.Flags().StringVar(&generateOpt.Out, "out-dir", curDir + types.Separator + "doc", "dst directory")
+	generateMdCmd.Flags().StringVar(&generateOpt.Out, "out-dir", curDir+types.Separator+"doc", "dst directory")
 	generateMdCmd.Flags().StringVar(&generateOpt.ApiDomain, "domain", "api.geekymedic.com.cn", "api http domain")
+	generateMdCmd.Flags().StringVar(&generateOpt.bffName, "bff-name", "", "bff name")
+	generateMdCmd.Flags().StringVar(&generateOpt.implName, "impl-name", "", "impl name")
+
 }
