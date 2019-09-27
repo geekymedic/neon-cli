@@ -2,14 +2,17 @@ package services
 
 import (
 	"fmt"
-	"github.com/geekymedic/neon-cli/templates"
-	"github.com/geekymedic/neon-cli/types/sysdes"
 	"math/rand"
 	"reflect"
 	"strings"
+	"time"
 
+	"github.com/geekymedic/neon-cli/templates"
+	"github.com/geekymedic/neon-cli/types/sysdes"
 	"github.com/geekymedic/neon-cli/types/xast"
+	"github.com/geekymedic/neon/utils/tool"
 
+	"github.com/Pallinder/go-randomdata"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -80,7 +83,7 @@ func InjectAstTree(topNode *xast.TopNode) interface{} {
 
 	var out = make(map[string]interface{})
 	for varName, leaf := range topNode.LeavesNodes {
-		out[varName] = defValue(leaf.TypeName)
+		out[varName] = defSmartValue(varName, leaf.TypeName)
 	}
 	for varName, extraNode := range topNode.ExtraNodes {
 		if extraNode.TypeName == reflect.Array.String() || extraNode.TypeName == reflect.Slice.String() {
@@ -95,7 +98,7 @@ func InjectAstTree(topNode *xast.TopNode) interface{} {
 func InjectExtraNode(extraNode *xast.ExtraNode) interface{} {
 	var out = make(map[string]interface{})
 	for varName, leaf := range extraNode.LeavesNodes {
-		out[varName] = defValue(leaf.TypeName)
+		out[varName] = defSmartValue(varName, leaf.TypeName)
 	}
 
 	for varName, extraNode := range extraNode.ExtraNodes {
@@ -114,11 +117,11 @@ func InjectExtraNode(extraNode *xast.ExtraNode) interface{} {
 			fullName := extraNode.Meta.(*xast.AstMeta).FullName
 			idx := strings.Index(fullName, "]")
 			typ := fullName[idx+1:]
-			return defValue(typ)
+			return defSmartValue(extraNode.Meta.(*xast.AstMeta).VarName, typ)
 		case reflect.Map.String():
 			fullName := extraNode.Meta.(*xast.AstMeta).FullName
 			kIdx, vIdx := strings.Index(fullName, "["), strings.Index(fullName, "]")
-			out[fmt.Sprintf("%v", defValue(fullName[kIdx+1:vIdx]))] = defValue(fullName[vIdx+1:])
+			out[fmt.Sprintf("%v", defSmartValue(extraNode.Meta.(*xast.AstMeta).VarName, fullName[kIdx+1:vIdx]))] = defSmartValue(extraNode.Meta.(*xast.AstMeta).VarName, fullName[vIdx+1:])
 			return out
 		}
 	}
@@ -156,4 +159,122 @@ func defValue(typ string) interface{} {
 	default:
 		return "Not Supper Type"
 	}
+}
+
+func defSmartValue(valName, typ string) interface{} {
+	for _, fn := range []func(string, string) (interface{}, bool){
+		localtionSmartDefValue,
+		humanSmartDefValue,
+		timeSmartDefValue,
+		computerSmartDefValue,
+		numericSmartDefValue,
+	} {
+		if ret, ok := fn(valName, typ); ok {
+			return ret
+		}
+	}
+
+	if strings.Contains(strings.ToLower(valName), "phone") && typ == reflect.String.String() {
+		return fmt.Sprintf("137" + fmt.Sprintf("%d", tool.RangeBitsInt(10000000, 99999999)))
+	}
+	if strings.Contains(strings.ToLower(valName), "mail") {
+		return randomdata.Email()
+	}
+
+	switch typ {
+	case reflect.Int.String(), reflect.Int8.String(), reflect.Int16.String(), reflect.Int32.String(), reflect.Int64.String(),
+		reflect.Uint.String(), reflect.Uint8.String(), reflect.Uint16.String(), reflect.Uint32.String(), reflect.Uint64.String():
+		return rand.Intn(1<<8 - 1)
+	case reflect.Float32.String(), reflect.Float64.String():
+		return rand.Float32()
+	case reflect.Bool.String():
+		return (rand.Intn(1<<8-1) % 2) == 0
+	case reflect.String.String():
+		return uuid.Must(uuid.NewV4(), nil).String()
+	default:
+		return "Not Supper Type"
+	}
+}
+
+func humanSmartDefValue(valName, typ string) (interface{}, bool) {
+	if strings.Contains(strings.ToLower(valName), "age") && strings.Contains(typ, "int") {
+		return tool.RangeBitsInt(16, 90), true
+	}
+	if strings.Contains(strings.ToLower(valName), "name") && typ == "string" {
+		return randomdata.SillyName(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "gender") && typ == "string" {
+		return randomdata.FullName(randomdata.RandomGender), true
+	}
+	return nil, false
+}
+
+func localtionSmartDefValue(valName, typ string) (interface{}, bool) {
+	if strings.Contains(strings.ToLower(valName), "country") && typ == "string" {
+		return randomdata.Country(randomdata.FullCountry), true
+	}
+	if strings.Contains(strings.ToLower(valName), "city") && typ == "string" {
+		return randomdata.City(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "province") && typ == "string" {
+		return randomdata.Country(randomdata.FullCountry), true
+	}
+	if strings.Contains(strings.ToLower(valName), "address") && typ == "string" {
+		return randomdata.Address(), true
+	}
+
+	return nil, false
+}
+
+func timeSmartDefValue(valName, typ string) (interface{}, bool) {
+	if strings.Contains(strings.ToLower(valName), "day") && typ == "string" {
+		return randomdata.Day(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "month") && typ == "string" {
+		return randomdata.Month(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "year") && typ == "string" {
+		return randomdata.Month(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "yesterday") && typ == "string" {
+		return randomdata.Day(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "tomorrow") && typ == "string" {
+		return randomdata.Day(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "date") && typ == "string" {
+		tm, _ := time.Parse(randomdata.DateOutputLayout, randomdata.FullDate())
+		return tm.Format("2006-01-02"), true
+	}
+	if strings.Contains(strings.ToLower(valName), "time") && typ == "string" {
+		tm, _ := time.Parse(randomdata.DateOutputLayout, randomdata.FullDate())
+		return tm.Format("2006-01-02"), true
+	}
+	if strings.Contains(strings.ToLower(valName), "hour") && typ == "int" {
+		return tool.RangeBitsInt(1, 24), true
+	}
+	if strings.Contains(strings.ToLower(valName), "minute") && typ == "int" {
+		return tool.RangeBitsInt(1, 60), true
+	}
+	if strings.Contains(strings.ToLower(valName), "second") && typ == "int" {
+		return tool.RangeBitsInt(1, 60), true
+	}
+	return nil, false
+}
+
+func computerSmartDefValue(valName, typ string) (interface{}, bool) {
+	if strings.Contains(strings.ToLower(valName), "ip") && typ == "string" {
+		return randomdata.IpV4Address(), true
+	}
+	if strings.Contains(strings.ToLower(valName), "mac") && typ == "string" {
+		return randomdata.MacAddress(), true
+	}
+	return nil, false
+}
+
+func numericSmartDefValue(valName, typ string) (interface{}, bool) {
+	if strings.Contains(strings.ToLower(valName), "number") && strings.Contains(typ, "int") {
+		return tool.RangeBitsInt(10, 100), true
+	}
+	return nil, false
 }
