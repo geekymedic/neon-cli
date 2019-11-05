@@ -31,10 +31,10 @@ func TestParseTemplate(t *testing.T) {
 
 		RequestJson: `{"token": "xxxxxxx"}`,
 		RequestTypeScript: `
-			export class ChangeDrugPriceRequest {
+			export interface ChangeDrugPriceRequest {
 				List: Array<ChangeDrugPriceRequestItem>;
 			}
-			class ChangeDrugPriceRequestItem{
+			interface ChangeDrugPriceRequestItem{
 				Id: number;
 				RetailPrice: number;
 				MembershipPrice: number;
@@ -57,7 +57,7 @@ func TestParseTemplate(t *testing.T) {
 		},
 		ResposneJson: `{"token": "xxxxxxx"}`,
 		ResposneTypeScript: `
-			export class ChangeDrugPriceRequest {
+			export interface ChangeDrugPriceRequest {
 				List: Array<ChangeDrugPriceRequestItem>;
 			}
 			class ChangeDrugPriceRequestItem{

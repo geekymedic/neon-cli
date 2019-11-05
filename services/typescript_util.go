@@ -66,9 +66,9 @@ func convertTS(astTree *xast.TopNode) (string, error) {
 	var txt = ""
 	for i, obj := range ret {
 		if i == 0 {
-			txt = "export class " + obj.Title + " {\n"
+			txt = "export interface " + obj.Title + " {\n"
 		} else {
-			txt += "class " + obj.Title + "{\n"
+			txt += "interface " + obj.Title + "{\n"
 		}
 		var kv []string
 		for k, v := range obj.Items {
