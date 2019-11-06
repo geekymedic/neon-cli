@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/spf13/cobra"
+
 	mini_gateway "github.com/geekymedic/neon-cli/mini-gateway"
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/util"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 var generateOpt = struct {
@@ -44,6 +46,6 @@ func init() {
 	generateMdCmd.Flags().StringVar(&generateOpt.Out, "out-dir", curDir+types.Separator+"doc", "dst directory")
 	generateMdCmd.Flags().StringVar(&generateOpt.ApiDomain, "domain", "api.geekymedic.com.cn", "api http domain")
 	generateMdCmd.Flags().StringVar(&generateOpt.bffName, "bff-name", "", "bff name")
-	generateMdCmd.Flags().StringVar(&generateOpt.implName, "impl-name", "", "impl name")
+	generateMdCmd.Flags().StringVar(&generateOpt.implName, "impl-name", "", "impl name: `store/impls/storage`")
 
 }

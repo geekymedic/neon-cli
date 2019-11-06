@@ -1,13 +1,14 @@
 package mini_gateway
 
 import (
+	"os"
+	"strings"
+
+	"github.com/laohanlinux/converter"
+
 	"github.com/geekymedic/neon-cli/services"
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
-	"github.com/laohanlinux/converter"
-	"strings"
-
-	"os"
 )
 
 func GenerateMarkdown(sysDirNode, out types.DirNode, bffName, impl, domain string) error {
