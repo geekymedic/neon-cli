@@ -108,9 +108,9 @@ func NewBffs(sys *SystemDes, bffName ...string) (*Bffs, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(items) == 0 {
-		return nil, errors.NewStackError("Not found any bff info")
-	}
+	// if len(items) == 0 {
+	// 	return nil, errors.NewStackError("Not found any bff info")
+	// }
 	return &Bffs{DirNode: bffDir, BffItems: items, Sys: sys}, nil
 }
 
