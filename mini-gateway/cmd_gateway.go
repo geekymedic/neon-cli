@@ -114,6 +114,21 @@ func GenerateService(sysDirNode types.DirNode, serviceName string) error {
 	}
 }
 
+func GenerateJob(sysDirNode types.DirNode, jobName, cmdName string) error {
+	sys, err := sysdes.NewSystemDes(sysDirNode)
+	if err != nil {
+		return err
+	}
+
+	server := services.NewGenerateServer(sys)
+	_, err = server.CreateJob(nil, &services.GenServerJobArg{
+		Name:   jobName,
+		SysDir: sysDirNode,
+		CmdName: cmdName,
+	})
+	return err
+}
+
 func ORM(table *converter.Table2Struct) error {
 	var arg = &services.GenServerORMArg{
 		Table: table,

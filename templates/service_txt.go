@@ -2,26 +2,6 @@ package templates
 
 const (
 	serviceConfigYmlTxt = `Name: "{{.Name}}"
-
-Address: ":8823"
-
-DB:
-  User:
-    DSN: "root:Geeky.mysql.@admin1@tcp(192.168.0.202:3306)/test?charset=utf8"
-    MaxIdle: 5
-    MaxOpen: 5
-
-Metrics:
-    Address: "0.0.0.0:7090"
-
-REDIS:
-  User:
-    DSN: "192.168.0.202:6379"
-
-Log:
-    Out: "consol"
-    Level: "debug"
-    Dir: ""
 `
 	serviceConfigTxt = `package config
 

@@ -1,6 +1,9 @@
 package sysdes
 
 import (
+	"bufio"
+	"bytes"
+	"github.com/geekymedic/neon-cli/util"
 	"github.com/geekymedic/neon/logger"
 	"os"
 	"path/filepath"
@@ -22,6 +25,7 @@ type SystemDes struct {
 	Name       string `yaml:"name"` // "foo-system"
 	ShortName  string
 	Author     string `yaml:"author"`
+	GoModel    string `yaml:"gomod"`
 	CreateTime string `yaml:"create_time"`
 	UpdateTime string `yaml:"update_time"`
 	Bffs       *Bffs  `yaml:"bff,omitempty"`
@@ -70,6 +74,20 @@ func NewSystemDes(dirNode interface{}, bffName ...string) (*SystemDes, error) {
 		return nil, errors.NewStackError("not found any bff info")
 	}
 	sys.Bffs = bffs
+	gomod := util.ConvertBreakLinePath(sys.DirNode.Abs() + "/"+ "go.mod")
+	gomodFp := types.NewBaseFile(gomod)
+	types.AssertNil(gomodFp.Create(os.O_RDONLY, os.ModePerm))
+	defer gomodFp.Close()
+	buf, err := gomodFp.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	line, _ , err := bufio.NewReader(bytes.NewBuffer(buf)).ReadLine()
+	if err != nil {
+		return  nil, err
+	}
+	lines := strings.Split(string(line), " ")
+	sys.GoModel = lines[len(lines)-1]
 	return sys, nil
 }
 
@@ -191,7 +209,7 @@ func NewBffItem(dirNode types.DirNode, sys *SystemDes) (*BffItem, error) {
 		impl, err := NewBffImpl(types.NewBaseFile(path), sys)
 		if err != nil {
 			logger.Warnf("Fail to parse interface: %v", err.Error())
-		} else if impl != nil{
+		} else if impl != nil {
 			bff.Impls = append(bff.Impls, impl)
 		}
 		return nil

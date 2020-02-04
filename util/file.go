@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/geekymedic/neon-cli/types"
 )
@@ -30,4 +31,15 @@ func AbsDir(dir string) (string, error) {
 		return "", err
 	}
 	return filepath.Clean(dir), err
+}
+
+func ConvertBreakLinePath(s string) string {
+	switch types.OsType() {
+	case types.MacOs, types.LinuxOs:
+		return s
+	case types.WindowsOs:
+		return strings.Replace(s, "/", "\\", -1)
+	}
+	types.PanicSanity("Unimplement")
+	return ""
 }

@@ -87,6 +87,12 @@ type GenServerORMArg struct {
 	Table *converter.Table2Struct
 }
 
+type GenServerJobArg struct {
+	Name    string
+	CmdName string
+	SysDir  types.DirNode
+}
+
 type OptsFunc func(*BaseCmdServer)
 
 func NewBaseCmdServer(opts ...OptsFunc) *BaseCmdServer {
