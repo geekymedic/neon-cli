@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/geekymedic/neon-cli/templates"
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
 	"github.com/geekymedic/neon-cli/util"
-	"os"
 )
 
 func (s *GenerateServer) CreateJob(ctx context.Context, arg *GenServerJobArg) (*EmptyReply, error) {
@@ -73,7 +74,7 @@ func (s *GenerateServer) CreateJob(ctx context.Context, arg *GenServerJobArg) (*
 		types.AssertNil(jobBaseNode.Append("cmd").(types.DirNode).Create(os.ModePerm))
 		scheduleRootFp := types.NewBaseFile(jobBaseNode.Append("cmd", "root.go").(types.DirNode).Abs())
 		scheduleRootFp.MustCreate(types.DefFlag, types.DefPerm)
-		txt, err := templates.ParseTemplate(templates.JobCmdRootTpl, nil)
+		txt, err := templates.ParseTemplate(templates.JobCmdRootTpl, map[string]interface{}{"subCmd": arg.CmdName})
 		types.AssertNil(err)
 		_, err = scheduleRootFp.WriteString(txt)
 		types.AssertNil(err)
@@ -116,7 +117,7 @@ func (s *GenerateServer) CreateJob(ctx context.Context, arg *GenServerJobArg) (*
 		mainFp := types.NewBaseFile(jobBaseNode.Append("main.go").(types.DirNode).Abs())
 		types.AssertNil(mainFp.Create(types.DefFlag, types.DefPerm))
 		txt, err := templates.ParseTemplate(templates.JobMainTpl, templates.JobMainTplArg{
-			ImportPackage:  fmt.Sprintf("%s/job/cronjob/%s/cmd", s.sys.GoModel, arg.Name),
+			ImportPackage: fmt.Sprintf("%s/job/cronjob/%s/cmd", s.sys.GoModel, arg.Name),
 		})
 		types.AssertNil(err)
 		_, err = mainFp.WriteString(txt)

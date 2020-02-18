@@ -47,7 +47,7 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "syncorderstatus",
+	Use:   "root",
 	Short: "A brief description of your application",
 	//	Run: func(cmd *cobra.Command, args []string) { },
 }
@@ -61,7 +61,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
+    rootCmd.AddCommand({{.subCmd}})
+	
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.syncorderstatus.yaml)")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -77,7 +78,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".syncorderstatus")
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
