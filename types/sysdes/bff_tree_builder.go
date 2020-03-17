@@ -408,6 +408,8 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 
 	// TODO Why? need rebuild
 	topNode.ReBuildWalkPath()
+	extraNode := NewExtendTree(topNode)
+	topNode = extraNode.FlatNestedNodes()
 	return nil
 }
 

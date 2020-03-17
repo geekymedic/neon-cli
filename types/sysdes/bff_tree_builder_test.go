@@ -38,10 +38,10 @@ func TestBffRequestTree_Parse(t *testing.T) {
 	}
 	err := bffTree.Parse()
 	assert.Nil(t, err)
-	//assert.NotNil(t, bffTree.TopNode)
-	//assert.Equal(t, "CreateHardwareRequest", bffTree.Name)
-	//assert.Equal(t, "b.i.rt", bffTree.Annotation.Typ)
-	//assert.Equal(t, "CreateHardwareHandler", bffTree.Annotation.Interface)
+	// assert.NotNil(t, bffTree.TopNode)
+	// assert.Equal(t, "CreateHardwareRequest", bffTree.Name)
+	// assert.Equal(t, "b.i.rt", bffTree.Annotation.Typ)
+	// assert.Equal(t, "CreateHardwareHandler", bffTree.Annotation.Interface)
 }
 
 func TestBffResponseTree_Parse(t *testing.T) {
@@ -198,6 +198,22 @@ func TestExtendTree_ReplaceExtraNode(t *testing.T) {
 
 }
 
+func TestFlatNodes(t *testing.T) {
+	Convey("", t, func() {
+		var bffTree = BffRequestTree{
+			FileNode: types.NewBaseFile(flatNodeFile(t)),
+		}
+		err := bffTree.Parse()
+		assert.Nil(t, err)
+		extendNode := NewExtendTree(bffTree.TopNode)
+		extendNode.FlatNestedNodes()
+		extendNode.BreadthFirst(nil, func(ctx context.Context, walkPath string, node interface{}) bool {
+			fmt.Println(walkPath)
+			return true
+		})
+	})
+}
+
 func bffFile(t *testing.T) string {
 	txt := `
 package hardware
@@ -249,49 +265,49 @@ func CreateHardwareHandler(state *bff.State) {
 	state.Success(ack)
 }
 `
-//	txt := `
-//package admin
-//
-//import (
-//	"github.com/geekymedic/neon/bff"
-//)
-//
-//// @type: bff.interface.request
-//// @interface: AddPortalHandler
-//// @des:
-//type AddPortalRequest struct {
-//	SupplierId  string // 供应商ID | Y | "" |
-//	Url         string // 接入商URL | Y | "" |
-//	Certificate string // 接入商证书 | Y | "PEM格式" |
-//}
-//
-//// @type: bff.interface.response
-//// @interface: AddPortalHandler
-//// @describe:
-//type AddPortalResponse struct {
-//	PortalID string // 供应商接入ID | Y | "" |
-//}
-//
-//// @type: bff.interface
-//// @name: 添加认证供应商接入
-//// @login: Y
-//// @page:
-//// @uri: /api/admin/v1/portals/add_portal
-//// @describe:
-//func AddPortalHandler(state *bff.State) {
-//	var (
-//		ask = &AddPortalRequest{}
-//		ack = &AddPortalResponse{}
-//	)
-//	if err := state.ShouldBindJSON(ask); err != nil {
-//		state.Error(bff.CodeRequestBodyError, err)
-//		return
-//	}
-//
-//	state.Success(ack)
-//}
-//
-//`
+	//	txt := `
+	// package admin
+	//
+	// import (
+	//	"github.com/geekymedic/neon/bff"
+	// )
+	//
+	// // @type: bff.interface.request
+	// // @interface: AddPortalHandler
+	// // @des:
+	// type AddPortalRequest struct {
+	//	SupplierId  string // 供应商ID | Y | "" |
+	//	Url         string // 接入商URL | Y | "" |
+	//	Certificate string // 接入商证书 | Y | "PEM格式" |
+	// }
+	//
+	// // @type: bff.interface.response
+	// // @interface: AddPortalHandler
+	// // @describe:
+	// type AddPortalResponse struct {
+	//	PortalID string // 供应商接入ID | Y | "" |
+	// }
+	//
+	// // @type: bff.interface
+	// // @name: 添加认证供应商接入
+	// // @login: Y
+	// // @page:
+	// // @uri: /api/admin/v1/portals/add_portal
+	// // @describe:
+	// func AddPortalHandler(state *bff.State) {
+	//	var (
+	//		ask = &AddPortalRequest{}
+	//		ack = &AddPortalResponse{}
+	//	)
+	//	if err := state.ShouldBindJSON(ask); err != nil {
+	//		state.Error(bff.CodeRequestBodyError, err)
+	//		return
+	//	}
+	//
+	//	state.Success(ack)
+	// }
+	//
+	// `
 	fileNode := types.NewBaseFile(fmt.Sprintf("%s%d", os.TempDir(), time.Now().UnixNano()))
 	err := fileNode.Create(os.O_CREATE|os.O_RDWR, types.DefPerm)
 	assert.Nil(t, err)
@@ -415,6 +431,74 @@ type Three struct {
 	if len(abs) > 0 {
 		fileNode = types.NewBaseFile(fmt.Sprintf("%s/%d.go", abs[0], time.Now().UnixNano()))
 	}
+	err := fileNode.Create(os.O_CREATE|os.O_RDWR, types.DefPerm)
+	assert.Nil(t, err)
+	defer fileNode.Close()
+	_, err = fileNode.WriteString(txt)
+	assert.Nil(t, err)
+
+	return fileNode.Abs()
+}
+
+func flatNodeFile(t *testing.T, abs ...string) string {
+	txt := `
+package hardware
+
+import (
+	store "protocol/store_system/store"
+	"store_system/bff/admin/rpc"
+
+	"github.com/geekymedic/neon/bff"
+)
+
+type Person struct {
+	Age int
+	Loc Local 
+}
+
+type Local struct {
+	Left int //
+	Right int //
+}
+
+// @type: b.i.rt
+// @interface: CreateHardwareHandler
+type CreateHardwareRequest struct {
+	Sn     string // 硬件序列号 | Y | "" | 可支持多个添加，以英文逗号(,)隔开
+	TypeId string // 硬件所属类型id | Y | "" |
+	Person // 用户 | Y | "" |
+	P1 Person // 用户 | Y | "" |
+}
+
+// @type: b.i.re
+// @interface: CreateHardwareHandler
+type CreateHardwareResponse struct {
+	User Person // 用户 | Y | "" |
+}
+
+// @type: b.i
+// @name: 新增硬件
+// @login: Y
+// @uri: /api/boss/v1/admin/login
+// @page: hardware|software
+func CreateHardwareHandler(state *bff.State) {
+	var (
+		ask = &CreateHardwareRequest{}
+		ack = &CreateHardwareResponse{}
+	)
+	if err := state.ShouldBindJSON(ask); err != nil {
+		state.Error(bff.CodeRequestBodyError, err)
+		return
+	}
+	_, err := rpc.NewStoreHardwareServer().CreateHardware(state.Context(), &store.CreateHardwareRequest{Sn: ask.Sn, TypeId: ask.TypeId})
+	if err != nil {
+		state.Error(bff.CodeServerError, err)
+		return
+	}
+	state.Success(ack)
+}
+`
+	fileNode := types.NewBaseFile(fmt.Sprintf("%s%d", os.TempDir(), time.Now().UnixNano()))
 	err := fileNode.Create(os.O_CREATE|os.O_RDWR, types.DefPerm)
 	assert.Nil(t, err)
 	defer fileNode.Close()

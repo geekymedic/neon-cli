@@ -1,9 +1,13 @@
 package sysdes
 
 import (
+	"container/list"
 	"context"
+	"fmt"
 	"go/ast"
+	"reflect"
 
+	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/xast"
 
 	"github.com/geekymedic/neon/logger"
@@ -36,7 +40,7 @@ func NewExtendTree(tree *xast.TopNode) *ExtendTree {
 }
 
 // Note:
-// topNode share memeory with sourcetree
+// topNode share memory with sourcetree
 func (topNode *ExtendTree) ReplaceExtraNode(sourceTree *xast.TopNode, fullName ...string) (count int) {
 	if sourceTree == nil {
 		return
@@ -44,7 +48,7 @@ func (topNode *ExtendTree) ReplaceExtraNode(sourceTree *xast.TopNode, fullName .
 	if len(fullName) == 0 {
 		fullName = []string{sourceTree.TypeName}
 	}
-	//fullName := sourceTree.Meta.(*xast.AstMeta).FullName
+	// fullName := sourceTree.Meta.(*xast.AstMeta).FullName
 	for _, targetNode := range topNode.FindNodesByFullNames(fullName) {
 		node, ok := targetNode.(*xast.ExtraNode)
 		if !ok {
@@ -62,4 +66,80 @@ func (topNode *ExtendTree) ReplaceExtraNode(sourceTree *xast.TopNode, fullName .
 		})
 	}
 	return
+}
+
+// FIXME:
+// struct {
+// 	A int //
+//  Local
+// }
+// struct {
+// 	A int //
+// }
+
+func (base *ExtendTree) FlatNestedNodes() *xast.TopNode {
+	var topNode = base.TopNode
+	stack := list.New()
+	stack.PushFront(topNode)
+	for {
+		// pop stack
+		node := stack.Front()
+		if node == nil {
+			break
+		}
+		stack.Remove(node)
+
+		switch typ := node.Value.(type) {
+		case *xast.LeafNode:
+		case *xast.ExtraNode:
+			for _, leaf := range typ.LeavesNodes {
+				stack.PushBack(leaf)
+			}
+			var flatStruct []string
+			for varName, extraNode := range typ.ExtraNodes {
+				meta := extraNode.Meta.(*xast.AstMeta)
+				// find a nested node
+				if meta.SysType == reflect.Struct.String() && meta.VarName == meta.FullName {
+					for key, leaf := range extraNode.LeavesNodes {
+						typ.LeavesNodes[key] = leaf.Copy()
+					}
+					for key, extraNode := range extraNode.ExtraNodes {
+						typ.ExtraNodes[key] = extraNode.Copy()
+					}
+					flatStruct = append(flatStruct, varName)
+				}
+				stack.PushBack(extraNode)
+			}
+			for _, key := range flatStruct {
+				delete(typ.ExtraNodes, key)
+			}
+		case *xast.TopNode:
+			for varName, leaf := range typ.LeavesNodes {
+				leaf.WalkPath = typ.TypeName + "." + varName
+				stack.PushBack(leaf)
+			}
+			var flatStruct []string
+			for varName, extraNode := range typ.ExtraNodes {
+				extraNode.WalkPath = typ.TypeName + "." + varName
+				meta := extraNode.Meta.(*xast.AstMeta)
+				// find a nested node
+				if meta.SysType == reflect.Struct.String() && meta.VarName == meta.FullName {
+					for key, leaf := range extraNode.LeavesNodes {
+						typ.LeavesNodes[key] = leaf.Copy()
+					}
+					for key, extraNode := range extraNode.ExtraNodes {
+						typ.ExtraNodes[key] = extraNode.Copy()
+					}
+					flatStruct = append(flatStruct, varName)
+				}
+				stack.PushBack(extraNode)
+			}
+			for _, key := range flatStruct {
+				delete(typ.ExtraNodes, key)
+			}
+		default:
+			types.PanicSanity(fmt.Sprintf("not support the type: %v", typ))
+		}
+	}
+	return topNode
 }

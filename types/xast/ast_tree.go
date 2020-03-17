@@ -200,7 +200,7 @@ func (topNode *TopNode) AfterInsertExtraNode(parentWalkPath, varName string, ext
 		}
 		_, ok := typ.ExtraNodes[varName]
 		if ok {
-			//fmt.Println("warning", parentWalkPath, "has exists")
+			// fmt.Println("warning", parentWalkPath, "has exists")
 			break
 		}
 		typ.ExtraNodes[varName] = &extraNode
@@ -210,14 +210,14 @@ func (topNode *TopNode) AfterInsertExtraNode(parentWalkPath, varName string, ext
 		}
 		_, ok := typ.ExtraNodes[varName]
 		if ok {
-			//fmt.Println("warning", parentWalkPath, "has exists")
+			// fmt.Println("warning", parentWalkPath, "has exists")
 			break
 		}
 		typ.ExtraNodes[varName] = &extraNode
 	default:
 		PanicSanity(fmt.Sprintf("not support the type: %T", curNode))
 	}
-	//fmt.Printf("insert a new extra node, parentWalkPath:%s, type:%s\n", parentWalkPath, varName)
+	// fmt.Printf("insert a new extra node, parentWalkPath:%s, type:%s\n", parentWalkPath, varName)
 	return nil
 }
 
@@ -236,7 +236,7 @@ func (topNode *TopNode) AfterInsertLeafNode(parentWalkPath, varName string, leaf
 		}
 		_, ok := typ.LeavesNodes[varName]
 		if ok {
-			//fmt.Println("warning", parentWalkPath, "has exists")
+			// fmt.Println("warning", parentWalkPath, "has exists")
 			break
 		}
 		typ.LeavesNodes[varName] = &leafNode
@@ -246,7 +246,7 @@ func (topNode *TopNode) AfterInsertLeafNode(parentWalkPath, varName string, leaf
 		}
 		_, ok := typ.LeavesNodes[varName]
 		if ok {
-			//fmt.Println("warning", parentWalkPath, "has exists")
+			// fmt.Println("warning", parentWalkPath, "has exists")
 			break
 		}
 		typ.LeavesNodes[varName] = &leafNode
