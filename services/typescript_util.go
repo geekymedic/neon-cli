@@ -81,6 +81,7 @@ func convertTS(astTree *xast.TopNode) (string, error) {
 }
 
 func parseTypeToTS(shortName, fullName string) string {
+	fmt.Println(shortName, fullName)
 	switch shortName {
 	case reflect.Int.String(), reflect.Int8.String(), reflect.Int16.String(), reflect.Int32.String(), reflect.Int64.String(),
 		reflect.Uint.String(), reflect.Uint8.String(), reflect.Uint16.String(), reflect.Uint32.String(), reflect.Uint64.String():
@@ -105,6 +106,8 @@ func parseTypeToTS(shortName, fullName string) string {
 		return array
 	case reflect.Map.String():
 		return "Any"
+	case reflect.Struct.String():
+		return fullName
 	default:
 		return shortName
 	}

@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/geekymedic/neon/utils/tool"
+
 	"github.com/geekymedic/neon-cli/templates"
 	"github.com/geekymedic/neon-cli/types/sysdes"
 	"github.com/geekymedic/neon-cli/types/xast"
-	"github.com/geekymedic/neon/utils/tool"
 
 	"github.com/Pallinder/go-randomdata"
 	uuid "github.com/satori/go.uuid"

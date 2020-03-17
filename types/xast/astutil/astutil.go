@@ -273,6 +273,7 @@ func BuildStructTree(structName string, filename string, src interface{}) (*xast
 		idx := strings.LastIndex(linkName, ".")
 		switch meta.SysType {
 		case reflect.Map.String(), reflect.Array.String(), reflect.Struct.String():
+			// fmt.Println(meta.SysType, linkName, meta)
 			extraNode := xast.NewExtraNode(meta.SysType, linkName, meta, nil, nil)
 			err := topNode.AfterInsertExtraNode(linkName[:idx], linkName[idx+1:], *extraNode)
 			types.AssertNil(err)
