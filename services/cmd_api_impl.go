@@ -100,8 +100,6 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 				return bffApi, errors.Wrap(err)
 			}
 			bffApi.RequestTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
-		} else {
-			return bffApi, errors.NewStackError("Fail to handle request")
 		}
 	}
 
