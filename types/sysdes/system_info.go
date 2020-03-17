@@ -3,16 +3,20 @@ package sysdes
 import (
 	"bufio"
 	"bytes"
-	"github.com/geekymedic/neon-cli/util"
-	"github.com/geekymedic/neon/logger"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 
-	"github.com/geekymedic/neon-cli/types"
+	"github.com/geekymedic/neon/logger"
+
+	"github.com/geekymedic/neon-cli/util"
+
 	"github.com/geekymedic/neon/errors"
+
+	"github.com/geekymedic/neon-cli/types"
 )
 
 const (
@@ -29,7 +33,7 @@ type SystemDes struct {
 	CreateTime string `yaml:"create_time"`
 	UpdateTime string `yaml:"update_time"`
 	Bffs       *Bffs  `yaml:"bff,omitempty"`
-	//Services   Services `yaml:"services,omitempty"`
+	// Services   Services `yaml:"services,omitempty"`
 	DirNode types.DirNode `json:",omitempty" yaml:"-"`
 }
 
@@ -74,7 +78,7 @@ func NewSystemDes(dirNode interface{}, bffName ...string) (*SystemDes, error) {
 		return nil, errors.NewStackError("not found any bff info")
 	}
 	sys.Bffs = bffs
-	gomod := util.ConvertBreakLinePath(sys.DirNode.Abs() + "/"+ "go.mod")
+	gomod := util.ConvertBreakLinePath(sys.DirNode.Abs() + "/" + "go.mod")
 	gomodFp := types.NewBaseFile(gomod)
 	types.AssertNil(gomodFp.Create(os.O_RDONLY, os.ModePerm))
 	defer gomodFp.Close()
@@ -82,9 +86,9 @@ func NewSystemDes(dirNode interface{}, bffName ...string) (*SystemDes, error) {
 	if err != nil {
 		return nil, err
 	}
-	line, _ , err := bufio.NewReader(bytes.NewBuffer(buf)).ReadLine()
+	line, _, err := bufio.NewReader(bytes.NewBuffer(buf)).ReadLine()
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 	lines := strings.Split(string(line), " ")
 	sys.GoModel = lines[len(lines)-1]
@@ -211,6 +215,8 @@ func NewBffItem(dirNode types.DirNode, sys *SystemDes) (*BffItem, error) {
 			logger.Warnf("Fail to parse interface: %v", err.Error())
 		} else if impl != nil {
 			bff.Impls = append(bff.Impls, impl)
+		} else {
+			logger.With("impl", path).Warn("Fail to handle impl")
 		}
 		return nil
 	})
@@ -261,6 +267,7 @@ func NewBffImpl(fileNode types.FileNode, sysDes *SystemDes) (*BffImpl, error) {
 	var bffTree *BffTree
 	defer func() {
 		if err1 := recover(); err1 != nil {
+			debug.PrintStack()
 			err = errors.Format("%v", err1)
 		}
 	}()
@@ -272,7 +279,7 @@ func NewBffImpl(fileNode types.FileNode, sysDes *SystemDes) (*BffImpl, error) {
 	bffImpl.Sys = sysDes
 	bffImpl.AstTree = bffTree
 	bffImpl.FileNode = fileNode
-	return bffImpl, nil
+	return bffImpl, err
 }
 
 // Fuck，为聊兼容老项目
@@ -293,40 +300,40 @@ func TargetImpls(fn func(_ string) bool) {
 }
 
 //
-//type Services struct {
+// type Services struct {
 //	AbsDir       string        `json:",omitempty" yaml:"-"`
 //	ServiceItems []ServiceItem `json:",omitempty" yaml:"names"`
 //	Sys          *SystemDes    `json:",omitempty" yaml:"-"`
-//}
+// }
 //
-//type ServiceItem struct {
+// type ServiceItem struct {
 //	Name   string        `json:",omitempty" yaml:"name,omitempty"`
 //	AbsDir string        `json:",omitempty" yaml:"-"`
 //	Impls  []ServiceImpl `json:",omitempty" yaml:"interfaces"`
 //	Sys    *SystemDes    `json:",omitempty" yaml:"-"`
-//}
+// }
 //
-//type ServiceImpl struct {
+// type ServiceImpl struct {
 //	Name     string     `json:",omitempty" yaml:"name,omitempty"`
 //	FileName string     `json:",omitempty" yaml:"filename,omitempty"`
 //	AbsPath  string     `json:",omitempty" yaml:"-"`
 //	Sys      *SystemDes `json:",omitempty" yaml:"-"`
-//}
+// }
 //
-//type AssetsItem struct {
+// type AssetsItem struct {
 //	Name               string    `json:"name"`
 //	CreateAt           time.Time `json:"created_at"`
 //	BrowserDownloadUrl string    `json:"browser_download_url"`
-//}
+// }
 //
-//type ApiRespItem struct {
+// type ApiRespItem struct {
 //	Id       int          `json:"id"`
 //	TagName  string       `json:"tag_name"`
 //	CreateAt time.Time    `json:"created_at"`
 //	Assets   []AssetsItem `json:"assets"`
-//}
+// }
 //
-//func CurOsAsset(assets []AssetsItem) AssetsItem {
+// func CurOsAsset(assets []AssetsItem) AssetsItem {
 //	switch types.OsType() {
 //	case types.MacOs:
 //		return MacAsset(assets)
@@ -337,31 +344,31 @@ func TargetImpls(fn func(_ string) bool) {
 //	}
 //
 //	panic("unimplementable")
-//}
+// }
 //
-//func MacAsset(assets []AssetsItem) AssetsItem {
+// func MacAsset(assets []AssetsItem) AssetsItem {
 //	for _, asset := range assets {
 //		if strings.Contains(asset.Name, "mac") {
 //			return asset
 //		}
 //	}
 //	panic("unimplementable")
-//}
+// }
 //
-//func LinuxAsset(assets []AssetsItem) AssetsItem {
+// func LinuxAsset(assets []AssetsItem) AssetsItem {
 //	for _, asset := range assets {
 //		if strings.Contains(asset.Name, "linux") {
 //			return asset
 //		}
 //	}
 //	panic("unimplementable")
-//}
+// }
 //
-//func WindowsAsset(assets []AssetsItem) AssetsItem {
+// func WindowsAsset(assets []AssetsItem) AssetsItem {
 //	for _, asset := range assets {
 //		if strings.Contains(asset.Name, "windows") {
 //			return asset
 //		}
 //	}
 //	panic("unimplementable")
-//}
+// }

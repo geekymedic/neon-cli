@@ -4,11 +4,12 @@ import (
 	"container/list"
 	"context"
 	"fmt"
-	"github.com/geekymedic/neon/logger"
 	"go/ast"
 	"go/parser"
 	"os"
 	"strings"
+
+	"github.com/geekymedic/neon/logger"
 
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/xast"
@@ -207,10 +208,10 @@ func (b *BffRequestTree) Parse() error {
 			continue
 		}
 		meta := topNode.Meta.(*xast.AstMeta)
-		//b.Name = meta.VarName
+		// b.Name = meta.VarName
 		// parse annotation
 		if err := b.ParseAnnotation(meta.Doc); err != nil {
-			//logger.With("path", b.FileNode.Abs(), "err", err).Debug("Fail to parse request")
+			// logger.With("path", b.FileNode.Abs(), "err", err).Debug("Fail to parse request")
 			continue
 		}
 
@@ -324,10 +325,10 @@ func (b *BffResponseTree) Parse() error {
 			continue
 		}
 		meta := topNode.Meta.(*xast.AstMeta)
-		//b.Name = meta.VarName
+		// b.Name = meta.VarName
 		// parse annotation
 		if err := b.ParseAnnotation(meta.Doc); err != nil {
-			//logger.With("path", b.FileNode.Abs(), "err", err).Debug("Fail to parse response")
+			// logger.With("path", b.FileNode.Abs(), "err", err).Debug("Fail to parse response")
 			continue
 		}
 		b.TopNode = topNode
@@ -381,7 +382,7 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 				if info.IsDir() || path == fileNode.Abs() || strings.HasSuffix(path, ".go") == false {
 					return nil
 				}
-				//logger.With("path", path).Info(crossModule)
+				logger.With("path", path, "crossModule", crossModule).Info("Handle cross module")
 				topNode, err := astutil.BuildStructTree(module, path, nil)
 				if err == nil && topNode != nil && topNode.TypeName == module {
 					logger.With("type-name", topNode.TypeName, "path", path, "module", module, "fileNode", fileNode.Abs()).Info("Fix cross file struct")
@@ -411,7 +412,7 @@ func fillCrossStructs(topNode *xast.TopNode, fileNode types.FileNode) error {
 }
 
 func fixCrossStructs(structName string, filename string, src interface{}) bool {
-	//logger.With("structName", structName, "filename", filename).Info("fix cross structs")
+	// logger.With("structName", structName, "filename", filename).Info("fix cross structs")
 	topNode, err := astutil.BuildStructTree(structName, filename, src)
 	return err == nil && topNode == nil
 }

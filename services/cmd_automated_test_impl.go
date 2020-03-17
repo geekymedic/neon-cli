@@ -48,5 +48,7 @@ func (s *GenerateServer) GenerateAutomatedTest(ctx context.Context, arg *GenServ
 		return true
 	})
 
+	// 生成http-client-private.env.json
+
 	return
 }

@@ -120,7 +120,7 @@ func SystemType(expr ast.Expr) (string, bool) {
 			// file b:
 			// type Address struct {
 			//
-			//}
+			// }
 			// so, it should struct type
 			return reflect.Struct.String(), true
 		}
@@ -132,7 +132,7 @@ func SystemType(expr ast.Expr) (string, bool) {
 	case *ast.MapType:
 		return reflect.Map.String(), false
 	case *ast.ArrayType:
-		//logger.With("module", realType, "elt", realType.Elt, "type", fmt.Sprintf("%T", realType.Elt)).Info("Cross modules")
+		// logger.With("module", realType, "elt", realType.Elt, "type", fmt.Sprintf("%T", realType.Elt)).Info("Cross modules")
 		return reflect.Array.String(), !IsSysInnerType(fmt.Sprintf("%v", realType.Elt))
 	case *ast.StarExpr: // pointer
 		return SystemType(realType.X)
@@ -145,6 +145,13 @@ func SystemType(expr ast.Expr) (string, bool) {
 func VarType(expr interface{}) string {
 	switch realVar := expr.(type) {
 	case *ast.Field:
+		if len(realVar.Names) <= 0 {
+			// FIXME: 嵌套类型，如 struct Person {
+			// 		Local
+			// }
+			// struct Local {}
+			return VarType(realVar.Type)
+		}
 		return realVar.Names[0].Name
 	case []*ast.Ident:
 		return VarType(realVar[0])
@@ -231,7 +238,7 @@ func walkExpr(ctx context.Context, parentName string, expr ast.Expr, walkNodeFun
 	case *ast.StarExpr: // pointer type
 		walkExpr(ctx, parentName, realType.X, walkNodeFuncs...)
 	case *ast.StructType:
-		//doLeafFns(ctx, parentName, realType, leafFns...)
+		// doLeafFns(ctx, parentName, realType, leafFns...)
 		for _, field := range realType.Fields.List {
 			walkAstField(ctx, parentName, field, walkNodeFuncs...)
 		}

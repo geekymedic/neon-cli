@@ -22,11 +22,12 @@ func (s *GenerateServer) GenerateApiDoc(_ context.Context, arg *GenServerApiDocA
 	var (
 		tables = templates.ApiListProperty{Title: "Api List"}
 	)
-	//var bffs sysdes.Bffs
+	// var bffs sysdes.Bffs
 	{
 		s.sys.Bffs.BffIter(func(item *sysdes.BffItem) bool {
 			var apiTable templates.ApiListTable
 			apiTable.Title = item.DirNode.Name()
+			// logger.With("bff", item.DirNode.Name()).Info("Start handle bff=>")
 			item.ImplIter(func(impl *sysdes.BffImpl) bool {
 				if _, err := s.convertInterfaceApiMarkdown(item.DirNode.Name(), impl, arg.Domain, arg.Out); err != nil {
 					logger.With("file", impl.FileNode.Abs(), "err", err).Error("Fail to convert markdown")
@@ -99,6 +100,8 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 				return bffApi, errors.Wrap(err)
 			}
 			bffApi.RequestTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
+		} else {
+			return bffApi, errors.NewStackError("Fail to handle request")
 		}
 	}
 
