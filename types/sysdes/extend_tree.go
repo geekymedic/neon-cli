@@ -125,6 +125,9 @@ func (base *ExtendTree) FlatNestedNodes() *xast.TopNode {
 				// find a nested node
 				if meta.SysType == reflect.Struct.String() && meta.VarName == meta.FullName {
 					for key, leaf := range extraNode.LeavesNodes {
+						if typ.LeavesNodes == nil {
+							typ.LeavesNodes = map[string]*xast.LeafNode{}
+						}
 						typ.LeavesNodes[key] = leaf.Copy()
 					}
 					for key, extraNode := range extraNode.ExtraNodes {
