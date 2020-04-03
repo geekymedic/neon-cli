@@ -133,7 +133,7 @@ func init() {
 import (
 	{{.Alias}} "{{.ImportPackage}}"
 
-	_ "github.com/geekymedic/neon/utils/validator"
+	_ "github.com/geekymedic/neon/utils/validator/v9"
 	"github.com/geekymedic/neon/bff"
 )
 
