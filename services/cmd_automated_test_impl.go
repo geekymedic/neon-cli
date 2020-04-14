@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/geekymedic/neon/logger"
+
 	"github.com/geekymedic/neon-cli/templates"
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
@@ -40,7 +42,11 @@ func (s *GenerateServer) GenerateAutomatedTest(ctx context.Context, arg *GenServ
 
 		filename := arg.Out.Append(fmt.Sprintf("%s_%s.http", item.DirNode.Name(), impl.FileNode.Name())).(types.DirNode).Abs()
 		mkFp := types.NewBaseFile(filename)
-		mkFp.MustCreate(os.O_CREATE|os.O_WRONLY|os.O_TRUNC, types.DefPerm)
+		err = mkFp.Create(os.O_CREATE|os.O_WRONLY|os.O_EXCL, types.DefPerm)
+		if err != nil {
+			logger.With("path", mkFp.Abs()).Info("Skipped")
+			return true
+		}
 		_, err = mkFp.WriteString(txt)
 		types.AssertNil(err)
 		types.AssertNil(mkFp.Sync())
