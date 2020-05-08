@@ -74,12 +74,12 @@ func convertSwift(astTree *xast.TopNode) (string, error) {
 		for k, v := range obj.Items {
 			kv = append(kv, fmt.Sprintf("\t%s: %s", k, v))
 		}
+		kv = append(kv, fmt.Sprintf("\t%s: %s", "required init() ", "{}"))
 		txt += strings.Join(kv, "\n")
 		txt += "\n}\n"
 	}
 	return txt, nil
 }
-
 
 func parseTypeToSwift(shortName, fullName string) string {
 	switch shortName {
