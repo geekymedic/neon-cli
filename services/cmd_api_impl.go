@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/geekymedic/neon-cli/templates"
 	"github.com/geekymedic/neon-cli/types"
@@ -85,6 +86,8 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 		}
 	)
 
+	// FixURI
+	bffApi.URI = FixURI(domain, bffName, sysName, impl.FileNode.Name(), bffApi.URI)
 	// request table
 	{
 		if table := assemblyRequestOrResponseTable(bffReqTree.TopNode, true); len(table) > 0 {
@@ -95,11 +98,33 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 			}
 			bffApi.RequestJson = fmt.Sprintf("```json\n%s```\n", pretty.Pretty(data.Bytes()))
 
+			// convert TypeScript Language Model
 			ts, err := convertTS(bffReqTree.TopNode)
 			if err != nil {
 				return bffApi, errors.Wrap(err)
 			}
 			bffApi.RequestTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
+
+			// convert JavaScript Language Model
+			java, err := convertJava(bffReqTree.TopNode)
+			if err != nil {
+				return bffApi, errors.Wrap(err)
+			}
+			bffApi.RequestJava = fmt.Sprintf("```java\n%s```\n", java)
+
+			// convert Swift Language model
+			swift, err := convertSwift(bffReqTree.TopNode)
+			if err != nil {
+				return bffApi, errors.Wrap(err)
+			}
+			bffApi.RequestSwift = fmt.Sprintf("```swift\n%s```\n", swift)
+
+			curl, err := convertCurl(bffReqTree.TopNode)
+			if err != nil {
+				return bffApi, errors.Wrap(err)
+			}
+			prettyJSON := strings.TrimSpace(string(pretty.Pretty([]byte(curl))))
+			bffApi.RequestCurl = fmt.Sprintf("```shell\ncurl %s -d '%s'\n```", bffApi.URI, prettyJSON)
 		}
 	}
 
@@ -118,13 +143,25 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 		if err := json.NewEncoder(&data).Encode(ret); err != nil {
 			return bffApi, err
 		}
-		bffApi.ResposneJson = fmt.Sprintf("```json\n%s```\n", pretty.Pretty(data.Bytes()))
+		bffApi.ResponseJson = fmt.Sprintf("```json\n%s```\n", pretty.Pretty(data.Bytes()))
 
 		ts, err := convertTS(bffReplyTree.TopNode)
 		if err != nil {
 			return bffApi, errors.Wrap(err)
 		}
-		bffApi.ResposneTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
+		bffApi.ResponseTypeScript = fmt.Sprintf("```typescript\n%s```\n", ts)
+
+		java, err := convertJava(bffReplyTree.TopNode)
+		if err != nil {
+			return bffApi, errors.Wrap(err)
+		}
+		bffApi.ResponseJava = fmt.Sprintf("```java\n%s```\n", java)
+
+		swift, err := convertSwift(bffReplyTree.TopNode)
+		if err != nil {
+			return bffApi, errors.Wrap(err)
+		}
+		bffApi.ResponseSwift = fmt.Sprintf("```swift\n%s```\n", swift)
 	}
 
 	// errcode
@@ -135,9 +172,6 @@ func (s *GenerateServer) convertInterfaceApiMarkdown(bffName string, impl *sysde
 			logger.Error("Fail parse errcode: %v", err)
 		}
 	}
-
-	// fix uri
-	bffApi.URI = FixURI(domain, bffName, sysName, impl.FileNode.Name(), bffApi.URI)
 
 	txt, err := templates.ParseTemplate(templates.InterfaceMarkdownTemplate, bffApi)
 	if err != nil {

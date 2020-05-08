@@ -29,6 +29,16 @@ const (
 
 ***TypeScript Object***
 {{.RequestTypeScript}}
+
+***Java Object***
+{{.RequestJava}}
+
+***Swift Object***
+{{.RequestSwift}}
+
+***Mock***
+{{.RequestCurl}}
+
 #### 返回格式
 {{range $i, $c := .ResponseTable}}
 **{{$c.Title}}**
@@ -40,10 +50,17 @@ const (
 {{end}}{{end}}
 {{end}}
 ***Example***:
-{{.ResposneJson}}
+{{.ResponseJson}}
 
 ***TypeScript Object***
-{{.ResposneTypeScript}}
+{{.ResponseTypeScript}}
+
+***Java Object***
+{{.ResponseJava}}
+
+***Swift Object***
+{{.ResponseSwift}}
+
 ### 错误码
 {{$fileSize := len .ErrCodeTable}}
 {{ if (gt $fileSize 0)}}

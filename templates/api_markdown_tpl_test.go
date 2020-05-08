@@ -55,8 +55,8 @@ func TestParseTemplate(t *testing.T) {
 				}},
 			},
 		},
-		ResposneJson: `{"token": "xxxxxxx"}`,
-		ResposneTypeScript: `
+		ResponseJson: `{"token": "xxxxxxx"}`,
+		ResponseTypeScript: `
 			export interface ChangeDrugPriceRequest {
 				List: Array<ChangeDrugPriceRequestItem>;
 			}

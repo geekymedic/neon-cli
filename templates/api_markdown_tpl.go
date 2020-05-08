@@ -12,9 +12,14 @@ type MarkdownProperty struct {
 	RequestTable       []MarkdownTable
 	RequestJson        interface{} // 请求参数示例
 	RequestTypeScript  interface{} // 请求参数-typescript 对象映射
+	RequestJava        interface{} // 请求参数-Java 对象映射
+	RequestSwift       interface{} // 请求参数-Swift 对象映射
+	RequestCurl        interface{} // 请求curl
 	ResponseTable      []MarkdownTable
-	ResposneJson       interface{} // 应答参数示例
-	ResposneTypeScript interface{} // 应答参数-typescript 对象映射
+	ResponseJson       interface{} // 应答参数示例
+	ResponseTypeScript interface{} // 应答参数-typescript 对象映射
+	ResponseJava       interface{} // 应答参数-Java 对象映射
+	ResponseSwift      interface{} // 应答参数-Swift 对象映射
 	ErrCodeTable       []MarkdownErrCodeTable
 }
 
