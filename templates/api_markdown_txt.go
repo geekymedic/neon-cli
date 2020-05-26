@@ -80,7 +80,7 @@ const (
 {{end}}`
 
 	intellijAutomatedTestTxt = `// {{.Title}}
-POST http://{{"{{host}}"}}{{.URL}}?_uid={{"{{uid}}"}}&_token={{"{{token}}"}}&_storeId={{"{{storeId}}"}}
+POST https://{{"{{host}}"}}{{.URL}}?_uid={{"{{uid}}"}}&_token={{"{{token}}"}}&_storeId={{"{{storeId}}"}}
 Content-Type: Application/json
 
 {{.Data}}

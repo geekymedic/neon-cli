@@ -10,6 +10,7 @@ type BffImplTplArg struct {
 	TagLogin      string
 	TagPage       string
 	TagURI        string
+	Version       string
 }
 
 type BffRouterImplTplArg struct {

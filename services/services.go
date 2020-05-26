@@ -1,9 +1,10 @@
 package services
 
 import (
+	"github.com/laohanlinux/converter"
+
 	"github.com/geekymedic/neon-cli/types"
 	"github.com/geekymedic/neon-cli/types/sysdes"
-	"github.com/laohanlinux/converter"
 )
 
 type Server interface {
@@ -42,11 +43,12 @@ type GenServerCreateBffImplArg struct {
 	BffName string        // eg: demo
 	SysName string        // eg: demo
 
-	//RpcPath  string
+	// RpcPath  string
 	TagZh    string
 	TagLogin string
 	TagPage  string
 	TagURI   string
+	Version  string
 }
 
 type GenServerCreateBffRouterArg struct {
@@ -72,10 +74,10 @@ type GenServerCreateServiceImplArg struct {
 	SysName     string        // eg: demo
 	SubffixOpt  string        // impls/ping/ping.go --> /ping
 
-	//TagZh    string
-	//TagLogin string
-	//TagPage  string
-	//TagURI   string
+	// TagZh    string
+	// TagLogin string
+	// TagPage  string
+	// TagURI   string
 }
 
 type GenServerAutomatedTestArg struct {
